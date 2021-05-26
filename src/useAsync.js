@@ -26,7 +26,7 @@ function reducer(state, action) { // useReducer함수 생성
     }
 }
 
-function useAsync(callback, deps = []) { // custom hook 생성, callback은 우리가 API를 호출하는 함수를 넣음, deps는 나중에 useEffect를 사용하여 컴포넌트가 로딩되거나 값이 변경됬을때 API를 재 요청할때 useEffect의 두번째 파라미터에 넣을 deps를 그대로 받아와서 사용
+function useAsync(callback, deps = [], skip = false) { // custom hook 생성, callback은 우리가 API를 호출하는 함수를 넣음, deps는 나중에 useEffect를 사용하여 컴포넌트가 로딩되거나 값이 변경됬을때 API를 재 요청할때 useEffect의 두번째 파라미터에 넣을 deps를 그대로 받아와서 사용
     const [state, dispatch] = useReducer(reducer, { // useReducer를 사용
         loading: false,
         data: null,
@@ -44,6 +44,9 @@ function useAsync(callback, deps = []) { // custom hook 생성, callback은 우�
     }, [callback]);
 
     useEffect(() => {
+        if (skip) { // skip이 true일때 아래 코드까지 진행되지 않고 return 해줌.
+            return;
+        }
         fetchData();
     }, deps);
 
