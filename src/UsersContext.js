@@ -1,7 +1,8 @@
 import React, { createContext, useReducer, useContext } from 'react';
+import axios from 'axios';
 
-const initialState = { // 기본상태 정의
-    user: { // API 요청으로 받아온 값을 이곳에 넣어줌
+const initialState = { // 초기상태 정의
+    users: { // API 요청으로 받아온 값을 이곳에 넣어줌
         loading: false,
         data: null,
         error: null,
@@ -13,7 +14,7 @@ const initialState = { // 기본상태 정의
     }
 }
 
-const loadingState = { //
+const loadingState = {
     loading: true,
     data: null,
     error: null,
@@ -54,7 +55,7 @@ function usersReducer(state, action) { // 6가지 액션에 대한 상태를 바
         case 'GET_USERS_ERROR':
             return {
                 ...state,
-                users: error(action.error);
+                users: error(action.error)
             };
         case 'GET_USER':
             return {
@@ -69,9 +70,71 @@ function usersReducer(state, action) { // 6가지 액션에 대한 상태를 바
         case 'GET_USER_ERROR':
             return {
                 ...state,
-                user: error(action.error);
+                user: error(action.error)
             };
         default:
             throw new Error('Unhandled action tyle', action.type);
+    }
+}
+
+const UsersStateContext = createContext(null); // 상태를 위한 Context
+const UsersDispatchContext = createContext(null); // Dispatch를 위한 Context
+
+export function UsersProvider({ children }) {
+    const [state, dispatch] = useReducer(usersReducer, initialState);
+    return (
+        <UsersStateContext.Provider value={state}>
+            <UsersDispatchContext value={dispatch}>
+                {children}
+            </UsersDispatchContext>
+        </UsersStateContext.Provider>
+    )
+}
+
+export function useUsersState() {
+    const state = useContext(UsersStateContext);
+    if (!state) {
+        throw new Error('Cannot find UserProvider');
+    }
+    return state;
+}
+
+export function useUsersDispatch() {
+    const dispatch = useContext(UsersDispatchContext);
+    if (!dispatch) {
+        throw new Error('Cannot find UserProvider');
+    }
+    return dispatch;
+}
+
+export async function getUsers(dispatch) {
+    dispatch({ type: 'GET_USERS' });
+    try {
+        const response = await axios.get('http://jsonplaceholder.typicode.com/users');
+        dispatch({
+            type: 'GET_USERS_SUCCESS',
+            data: response.loadingState
+        });
+    } catch (e) {
+        dispatch({
+            type: 'GET_USERS_ERROR',
+            error: e,
+        });
+    }
+}
+
+export async function getUser(dispatch, id) {
+    dispatch({ type: 'GET_USER' });
+    try {
+        const response = await axios.get(`http://jsonplaceholder.typicode.com/users/${id}`);
+        dispatch({
+            type: 'GET_USER_SUCCESS',
+            data: response.loadingState
+        });
+    } catch (e) {
+        dispatch({
+            type: 'GET_USER_ERROR',
+            error: e,
+        });
     }
 }
